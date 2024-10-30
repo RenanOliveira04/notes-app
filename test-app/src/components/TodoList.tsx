@@ -31,5 +31,9 @@ export default function TodoList({
           />
         ))}
       </div>
-
-    </>)};
+      {todos.length === 0 && (
+        <p className="text-center text-gray-400">No todos found, add a new one above.</p>
+      )}
+    </>
+);
+}
