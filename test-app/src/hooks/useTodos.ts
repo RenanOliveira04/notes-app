@@ -1,50 +1,77 @@
 import { useEffect, useState } from "react";
 import { Todo } from "../types/todo";
-import { dummyData } from "../data/todos";
 
 export default function useTodos() {
-    const [todos, setTodos] = useState(() => {
-        const savedTodosString = localStorage.getItem('todos');
-        const savedTodos: Todo[] = savedTodosString ? JSON.parse(savedTodosString) : [];
-        return savedTodos.length > 0 ? savedTodos : dummyData;
-      });
-    
-      useEffect(() => {
-        localStorage.setItem('todos', JSON.stringify(todos))
-      }, [todos])
-    
-      function setTodoCompleted(id: number, completed: boolean) {
-        setTodos((prevTodos) =>
-          prevTodos.map((todo) =>
-            todo.id === id ?
-              { ...todo, completed } : todo))
-      }
-    
-      function addTodo(title: string) {
-        setTodos((prevTodos) => [
-          {
-            id: Math.max(...prevTodos.map((todo) => todo.id), 0) + 1,
-            title,
-            completed: false,
-          },
-          ...prevTodos,
-        ]);
-      }
-    
-      function deleteTodo (id: number) {
-        setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
-      }
-    
-    function deleteAllCompletedTodos() {
-      setTodos(prevTodos => prevTodos.filter(todo => !todo.completed));
+    const [todos, setTodos] = useState<Todo[]>([]);
+
+    useEffect(() => {
+        async function fetchTodos() {
+            try {
+                const response = await fetch('http://localhost:3000/todos');
+                const data = await response.json();
+                setTodos(data);
+            } catch (error) {
+                console.error("Erro ao buscar todos:", error);
+            }
+        }
+        fetchTodos();
+    }, []);
+
+    async function addTodo(title: string) {
+        try {
+            const response = await fetch('http://localhost:3000/todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title }),
+            });
+            const newTodo = await response.json();
+            setTodos((prevTodos) => [...prevTodos, newTodo]);
+        } catch (error) {
+            console.error("Erro ao adicionar todo:", error);
+        }
     }
 
-    return {
-        todos,
-        setTodoCompleted,
-        addTodo,
-        deleteTodo,
-        deleteAllCompletedTodos
+    async function setTodoCompleted(id: number, completed: boolean) {
+        try {
+            const response = await fetch(`http://localhost:3000/todos/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ completed }),
+            });
+            const updatedTodo = await response.json();
+            setTodos((prevTodos) =>
+                prevTodos.map((todo) => (todo.id === id ? updatedTodo : todo))
+            );
+        } catch (error) {
+            console.error("Erro ao atualizar todo:", error);
+        }
     }
-    
+
+    async function deleteTodo(id: number) {
+        try {
+            await fetch(`http://localhost:3000/todos/${id}`, {
+                method: 'DELETE',
+            });
+            setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+        } catch (error) {
+            console.error("Erro ao deletar todo:", error);
+        }
+    }
+
+    const deleteAllCompletedTodos = async () => {
+        try {
+            await fetch('/api/todos/completed', {
+                method: 'DELETE',
+            });
+            setTodos(prevTodos => prevTodos.filter(todo => !todo.completed));
+        } catch (error) {
+            console.error('Failed to delete completed todos:', error);
+        }
+    };
+
+    return { todos, addTodo, setTodoCompleted, deleteTodo, deleteAllCompletedTodos };
 }
