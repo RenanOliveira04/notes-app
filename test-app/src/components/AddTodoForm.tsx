@@ -28,7 +28,7 @@ export default function AddTodoForm({onSubmit}: AddTodoFormProps) {
             />
             <button 
             type="submit" 
-            className="w-16 rounded-e-md bg-slate-900 text-white hover:bg-slate-800">
+            className="w-16 rounded-e-md bg-purple-800 text-white hover:bg-purple-600">
                 Add 
             </button>
         </form>

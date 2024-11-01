@@ -13,7 +13,7 @@ deleteAllCompleted,
 
     return (
         <div className="text-center space-y-2">
-            <p className="text-gray-400 text-sm font-medium">
+            <p className="text-sm font-medium text-white">
                 {completedTodos.length} / {todos.length} todos completed
             </p>
             {completedTodos.length > 0 && (
